@@ -62,7 +62,7 @@ The application allows users to migrate data from MongoDB to a SQL data warehous
 
 **Data Analysis**
 
-The project provides comprehensive data analysis capabilities for both channels and videos. Users can easily visualize and analyze the collected data within the Streamlit app.
+The project provides comprehensive data analysis capabilities using Plotly and Streamlit. With the integrated Plotly library, users can create interactive and visually appealing charts and graphs to gain insights from the collected data.
 
 **1. Channel Analysis**
 
@@ -70,7 +70,13 @@ Channel analysis includes insights on playlists, videos, subscribers, views, lik
 
 **2. Video Analysis**
 
-Video analysis focuses on views, likes, comments, and durations, enabling both overall channel and specific channel perspectives. Leverage visual representations and metrics to extract valuable insights from individual videos.
+Video analysis focuses on views, likes, comments, and durations, enabling both an overall channel and specific channel perspectives. Leverage visual representations and metrics to extract valuable insights from individual videos.
+
+Utilizing the power of Plotly, users can create various types of charts, including line charts, bar charts, scatter plots, pie charts, and more. These visualizations enhance the understanding of the data and make it easier to identify patterns, trends, and correlations.
+
+The Streamlit app provides an intuitive interface to interact with the charts and explore the data visually. Users can customize the visualizations, filter data, and zoom in or out to focus on specific aspects of the analysis.
+
+With the combined capabilities of Plotly and Streamlit, the Data Analysis section empowers users to uncover valuable insights and make data-driven decisions.
 
 **Contributing**
 
