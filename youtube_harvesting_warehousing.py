@@ -683,7 +683,7 @@ def analysis_channels():
         fig = px.bar(df_sorted, x='Total Views', y='Channel Names', template='seaborn')
         fig.update_traces(text=df_sorted['Total Views'], textposition='auto')
         colors = px.colors.qualitative.Plotly
-        fig.update_traces(marker=dict(color=colors[:len(df_sorted)]), insidetextfont=dict(color='black'))
+        fig.update_traces(marker=dict(color=colors[:len(df_sorted)]))
         st.plotly_chart(fig, use_container_width=True)
 
     # Channel wise  Likes pie
@@ -722,8 +722,7 @@ def analysis_channels():
     with col18:
         df_sorted['Total Durations'] = pd.to_timedelta(df_sorted['Total Durations']).dt.total_seconds()
         fig = px.pie(df_sorted, names='Channel Names', values='Total Durations', hole=0.5)
-        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent', textposition='outside',
-                          textfont=dict(color='white'))
+        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent', textposition='outside')
         st.plotly_chart(fig, use_container_width=True)
 
     # Channel wise Video Average Durations pie
