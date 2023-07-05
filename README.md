@@ -19,12 +19,12 @@ YouTube Data Harvesting and Warehousing is a project aimed at developing a user-
 11. Contact
 
 **Key Technologies and Skills**
-1. Python scripting
-2. Data Collection
-3. MongoDB
-4. Streamlit
-5. API integration
-6. Data Management using MongoDB (Atlas) and SQL
+- Python scripting
+- Data Collection
+- MongoDB
+- Streamlit
+- API integration
+- Data Management using MongoDB (Atlas) and SQL
 
 **Installation**
 
@@ -50,12 +50,12 @@ To use this project, follow these steps:
 
 **Features**
 
-1. Retrieve data from the YouTube API, including channel information, playlists, videos, and comments.
-2. Store the retrieved data in a MongoDB database.
-3. Migrate the data to a SQL data warehouse.
-4. Analyze and visualize data using Streamlit and Plotly.
-5. Perform queries on the SQL data warehouse.
-6. Gain insights into channel performance, video metrics, and more.
+- Retrieve data from the YouTube API, including channel information, playlists, videos, and comments.
+- Store the retrieved data in a MongoDB database.
+- Migrate the data to a SQL data warehouse.
+- Analyze and visualize data using Streamlit and Plotly.
+- Perform queries on the SQL data warehouse.
+- Gain insights into channel performance, video metrics, and more.
 
 **Retrieving data from the YouTube API**
 
