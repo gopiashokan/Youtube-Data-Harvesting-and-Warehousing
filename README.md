@@ -6,19 +6,16 @@ YouTube Data Harvesting and Warehousing is a project aimed at developing a user-
 
 **Table of Contents**
 
-Installation
-Usage
-Features
-Retrieving data from the YouTube API
-Storing data in MongoDB
-Migrating data to a SQL data warehouse
-Data Analysis
-Contributing
-License
-Documentation
-Acknowledgments
-Troubleshooting
-Contact
+1. Installation
+2. Usage
+3. Features
+4. Retrieving data from the YouTube API
+5. Storing data in MongoDB
+6. Migrating data to a SQL data warehouse
+7. Data Analysis
+8. Contributing
+9. License
+10. Contact
 
 **Installation**
 
@@ -67,11 +64,11 @@ The application allows users to migrate data from MongoDB to a SQL data warehous
 
 The project provides comprehensive data analysis capabilities for both channels and videos. Users can easily visualize and analyze the collected data within the Streamlit app.
 
-**Channel Analysis**
+**1. Channel Analysis**
 
 Channel analysis includes insights on playlists, videos, subscribers, views, likes, comments, and durations. Gain a deep understanding of the channel's performance and audience engagement through detailed visualizations and summaries.
 
-**Video Analysis**
+**2. Video Analysis**
 
 Video analysis focuses on views, likes, comments, and durations, enabling both overall channel and specific channel perspectives. Leverage visual representations and metrics to extract valuable insights from individual videos.
 
@@ -84,4 +81,5 @@ Contributions to this project are welcome! If you encounter any issues or have s
 This project is licensed under the MIT License. Please review the LICENSE file for more details.
 
 **Contact**
+
 For any further questions or inquiries, please contact us at gopiashokankiot@gmail.com. We are happy to assist you.
