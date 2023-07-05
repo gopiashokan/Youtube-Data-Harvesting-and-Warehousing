@@ -24,13 +24,13 @@ Contact
 
 To run this project, you need to install the following packages:
 ```python
-import googleapiclient.discovery
-import pymongo
-import pandas as pd
-import psycopg2
-import datetime
-import streamlit as st
-import plotly.express as px
+pip install googleapiclient.discovery
+pip install pymongo
+pip install pandas as pd
+pip install psycopg2
+pip install datetime
+pip install streamlit as st
+pip install plotly.express as px
 ```
 
 **Usage**
