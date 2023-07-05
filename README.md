@@ -54,7 +54,7 @@ The project utilizes the Google API to retrieve comprehensive data from YouTube 
 
 **Storing data in MongoDB**
 
-The retrieved data is automatically stored in a temporary MongoDB database. Once stored, the data is transferred to the main database. If data already exists, it can be overwritten with user confirmation. This storage process ensures efficient data management and preservation.
+The retrieved data is stored in a MongoDB database based on user authorization. If the data already exists in the database, it can be overwritten with user consent. This storage process ensures efficient data management and preservation, allowing for seamless handling of the collected data.
 
 **Migrating data to a SQL data warehouse**
 
