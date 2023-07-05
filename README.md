@@ -50,7 +50,7 @@ To use this project, follow these steps:
 
 **Retrieving data from the YouTube API**
 
-The project utilizes the Google API to retrieve comprehensive data from YouTube channels. The data includes information on channels, playlists, videos, and comments. By interacting with the Google API, we collect the data and merge it into a structured JSON file.
+The project utilizes the Google API to retrieve comprehensive data from YouTube channels. The data includes information on channels, playlists, videos, and comments. By interacting with the Google API, we collect the data and merge it into a JSON file.
 
 **Storing data in MongoDB**
 
