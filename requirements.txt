@@ -1,0 +1,7 @@
+google-api-python-client==2.91.0
+pymongo==4.4.0
+pandas==2.0.3
+psycopg2==2.9.6
+datetime==5.1
+streamlit==1.24.0
+plotly==5.15.0
