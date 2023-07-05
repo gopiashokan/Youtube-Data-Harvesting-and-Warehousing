@@ -31,6 +31,7 @@ import psycopg2
 import datetime
 import streamlit as st
 import plotly.express as px
+```
 
 **Usage**
 
