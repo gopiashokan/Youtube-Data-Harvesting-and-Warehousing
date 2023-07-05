@@ -37,10 +37,10 @@ pip install plotly.express as px
 
 To use this project, follow these steps:
 
-1. Clone the repository: **git clone https://github.com/gopiashokan/Youtube-Harvesting-and-Warehousing.git**
-2. Install the required packages: **pip install -r requirements.txt**
-3. Run the Streamlit app: **streamlit run app.py**
-4. Access the app in your browser at **http://localhost:8501**
+1. Clone the repository: ```git clone https://github.com/gopiashokan/Youtube-Harvesting-and-Warehousing.git```
+2. Install the required packages: ```pip install -r requirements.txt```
+3. Run the Streamlit app: ```streamlit run app.py```
+4. Access the app in your browser at ```http://localhost:8501```
 
 **Features**
 
