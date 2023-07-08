@@ -1204,127 +1204,130 @@ list_options = ['Select one', 'Retrieving data from the YouTube API', 'Store dat
 option = st.selectbox('', list_options)
 
 if option:
-    if option == 'Retrieving data from the YouTube API':
-        channel_id = st.text_input("Enter channel ID: ")  # get a input from user
-        submit_c = st.button('Enter')
-        if submit_c:
-            data_extraction = data_extraction_youtube(channel_id)
+    try:
+        if option == 'Retrieving data from the YouTube API':
+            channel_id = st.text_input("Enter channel ID: ")  # get a input from user
+            submit_c = st.button('Enter')
+            if submit_c:
+                data_extraction = data_extraction_youtube(channel_id)
+                data_youtube = {}
+                data_youtube.update(data_extraction)
+                channel_name = data_youtube['channel_name']['channel_name']
+                temp_collection_drop()
+                data_store_mongodb(channel_name=channel_name, database='temp', data_youtube=data_youtube)
+                st.json(display_sample_data(channel_id))  # display the sample data in streamlit
+                st.success('Retrived data from YouTube successfully')
+                st.balloons()
+
+        elif option == 'Store data to MongoDB':
             data_youtube = {}
-            data_youtube.update(data_extraction)
-            channel_name = data_youtube['channel_name']['channel_name']
-            temp_collection_drop()
-            data_store_mongodb(channel_name=channel_name, database='temp', data_youtube=data_youtube)
-            st.json(display_sample_data(channel_id))  # display the sample data in streamlit
-            st.success('Retrived data from YouTube successfully')
-            st.balloons()
+            gopi = pymongo.MongoClient(
+                "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
+            db = gopi['temp']
+            col = db.list_collection_names()
+            channel_name = col[0]
 
-    elif option == 'Store data to MongoDB':
-        data_youtube = {}
-        gopi = pymongo.MongoClient(
-            "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
-        db = gopi['temp']
-        col = db.list_collection_names()
-        channel_name = col[0]
+            gopi = pymongo.MongoClient(
+                "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
+            db = gopi['temp']
+            col1 = db[channel_name]
+            for i in col1.find():
+                data_youtube.update(i)
 
-        gopi = pymongo.MongoClient(
-            "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
-        db = gopi['temp']
-        col1 = db[channel_name]
-        for i in col1.find():
-            data_youtube.update(i)
+            list_collections_name = list_mongodb_collection_names(database)
 
-        list_collections_name = list_mongodb_collection_names(database)
-
-        if channel_name not in list_collections_name:
-            data_store_mongodb(channel_name, database, data_youtube)
-            st.success("The data has been successfully stored in the MongoDB database")
-            st.snow()
-            temp_collection_drop()
-        else:
-            st.warning("The data has already been stored in MongoDB database")
-            option = st.radio('Do you want to overwrite the data currently stored?', ['Select the option below', 'Yes', 'No'])
-            if option == 'Yes':
-                gopi = pymongo.MongoClient(
-                    "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
-                db = gopi[database]
-                db[channel_name].drop()
+            if channel_name not in list_collections_name:
                 data_store_mongodb(channel_name, database, data_youtube)
-                st.success("The data has been successfully overwritten and updated in MongoDB database")
+                st.success("The data has been successfully stored in the MongoDB database")
                 st.snow()
                 temp_collection_drop()
-            elif option == 'No':
-                temp_collection_drop()
-                st.info("The data overwrite process has been skipped")
-
-    elif option == 'Migrating data to a SQL data warehouse':
-        order_sql_channel_names()
-        order_mongodb_collection_names()
-
-        list_mongodb_notin_sql = ['Select the option']
-        m = list_mongodb_collection_names(database)
-        s = list_sql_channel_names()
-        for i in m:
-            if i not in s:
-                list_mongodb_notin_sql.append(i)
-
-        option_sql = st.selectbox('', list_mongodb_notin_sql)
-        if option_sql:
-            if option_sql == 'Select the option':
-                st.warning('Please select the channel')
             else:
-                col_input = option_sql
+                st.warning("The data has already been stored in MongoDB database")
+                option = st.radio('Do you want to overwrite the data currently stored?', ['Select the option below', 'Yes', 'No'])
+                if option == 'Yes':
+                    gopi = pymongo.MongoClient(
+                        "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
+                    db = gopi[database]
+                    db[channel_name].drop()
+                    data_store_mongodb(channel_name, database, data_youtube)
+                    st.success("The data has been successfully overwritten and updated in MongoDB database")
+                    st.snow()
+                    temp_collection_drop()
+                elif option == 'No':
+                    temp_collection_drop()
+                    st.info("The data overwrite process has been skipped")
 
-                pd.set_option('display.max_rows', None)
-                pd.set_option('display.max_columns', None)
+        elif option == 'Migrating data to a SQL data warehouse':
+            order_sql_channel_names()
+            order_mongodb_collection_names()
 
-                channel = sql_channel(database, col_input)
-                playlists = sql_playlists(database, col_input)
-                videos = sql_videos(database, col_input)
-                comments = sql_comments(database, col_input)
+            list_mongodb_notin_sql = ['Select the option']
+            m = list_mongodb_collection_names(database)
+            s = list_sql_channel_names()
+            for i in m:
+                if i not in s:
+                    list_mongodb_notin_sql.append(i)
 
-                gopi_sql = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
-                cursor = gopi_sql.cursor()
+            option_sql = st.selectbox('', list_mongodb_notin_sql)
+            if option_sql:
+                if option_sql == 'Select the option':
+                    st.warning('Please select the channel')
+                else:
+                    col_input = option_sql
 
-                cursor.executemany("insert into channel(channel_id, channel_name, subscription_count, channel_views,\
-                                        channel_description, upload_id, country) values(%s,%s,%s,%s,%s,%s,%s)",
-                                   channel.values.tolist())
-                cursor.executemany("insert into playlist(playlist_id, playlist_name, channel_id, upload_id)\
-                                        values(%s,%s,%s,%s)", playlists.values.tolist())
-                cursor.executemany("insert into video(video_id, video_name, video_description, upload_id, tags, published_date,\
-                                        published_time, view_count, like_count, favourite_count, comment_count, duration, thumbnail,\
-                                        caption_status) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                                   videos.values.tolist())
-                cursor.executemany("insert into comment(comment_id, comment_text, comment_author, comment_published_date,\
-                                        comment_published_time, video_id) values(%s,%s,%s,%s,%s,%s)",
-                                   comments.values.tolist())
+                    pd.set_option('display.max_rows', None)
+                    pd.set_option('display.max_columns', None)
 
-                gopi_sql.commit()
-                st.success("Migrated Data Successfully to SQL Data Warehouse")
-                st.balloons()
-                gopi_sql.close()
+                    channel = sql_channel(database, col_input)
+                    playlists = sql_playlists(database, col_input)
+                    videos = sql_videos(database, col_input)
+                    comments = sql_comments(database, col_input)
 
-    elif option == 'Data Analysis':
-        gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
-        cursor = gopi_s.cursor()
-        cursor.execute('select channel_name from channel order by channel_name ASC')
-        s = cursor.fetchall()
-        list_channel = ['Over All']
-        list_channel.extend([i[0] for i in s])
-        st.subheader('Please select the option below:')
-        analysis = ['Select one', 'Channels', 'Videos']
-        select_analysis = st.selectbox('', analysis)
-        if select_analysis == 'Channels':
-            analysis_channels()
-        elif select_analysis == 'Videos':
-            analysis_videos()
+                    gopi_sql = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+                    cursor = gopi_sql.cursor()
 
-    elif option == 'SQL Queries':
-        sql_queries()
+                    cursor.executemany("insert into channel(channel_id, channel_name, subscription_count, channel_views,\
+                                            channel_description, upload_id, country) values(%s,%s,%s,%s,%s,%s,%s)",
+                                       channel.values.tolist())
+                    cursor.executemany("insert into playlist(playlist_id, playlist_name, channel_id, upload_id)\
+                                            values(%s,%s,%s,%s)", playlists.values.tolist())
+                    cursor.executemany("insert into video(video_id, video_name, video_description, upload_id, tags, published_date,\
+                                            published_time, view_count, like_count, favourite_count, comment_count, duration, thumbnail,\
+                                            caption_status) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                                       videos.values.tolist())
+                    cursor.executemany("insert into comment(comment_id, comment_text, comment_author, comment_published_date,\
+                                            comment_published_time, video_id) values(%s,%s,%s,%s,%s,%s)",
+                                       comments.values.tolist())
 
-    elif option == 'Exit':
-        temp_collection_drop()
-        st.success('Thank you for your time. Exiting the application')
-        st.balloons()
+                    gopi_sql.commit()
+                    st.success("Migrated Data Successfully to SQL Data Warehouse")
+                    st.balloons()
+                    gopi_sql.close()
 
-    else:
-        st.error("The selected option is invalid")
+        elif option == 'Data Analysis':
+            gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+            cursor = gopi_s.cursor()
+            cursor.execute('select channel_name from channel order by channel_name ASC')
+            s = cursor.fetchall()
+            list_channel = ['Over All']
+            list_channel.extend([i[0] for i in s])
+            st.subheader('Please select the option below:')
+            analysis = ['Select one', 'Channels', 'Videos']
+            select_analysis = st.selectbox('', analysis)
+            if select_analysis == 'Channels':
+                analysis_channels()
+            elif select_analysis == 'Videos':
+                analysis_videos()
+
+        elif option == 'SQL Queries':
+            sql_queries()
+
+        elif option == 'Exit':
+            temp_collection_drop()
+            st.success('Thank you for your time. Exiting the application')
+            st.balloons()
+
+        else:
+            st.warning("Please select the option")
+    except:
+        st.error("Please enter the valid channel ID")
