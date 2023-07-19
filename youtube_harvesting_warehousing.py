@@ -9,12 +9,6 @@ import datetime
 st.set_page_config(page_title='YouTube Data Harvesting and Warehousing', page_icon=':bar_chart:', layout="wide")
 pd.set_option('display.max_columns', None)
 
-api_key = "AIzaSyAaw3ikNMYDMo6LS1E9Cc5tg3N5jqZAvWg"
-api_service_name = "youtube"
-api_version = "v3"
-
-youtube = googleapiclient.discovery.build(
-    api_service_name, api_version, developerKey=api_key)
 
 # --------------Data Retrieving from youtube ---------------
 
@@ -33,6 +27,7 @@ def get_channel_details(youtube, channel_id):
             'upload_id': response['items'][0]['contentDetails']['relatedPlaylists']['uploads'],
             'country': response['items'][0]['snippet']['country']}
     return data
+
 
 # playlist data retrive from youtube
 def get_total_playlists(youtube, channel_id, upload_id):
@@ -79,12 +74,13 @@ def get_total_playlists(youtube, channel_id, upload_id):
 
     return playlists
 
+
 # video ids retrive from youtube
 def get_total_video_ids(youtube, upload_id):
     request = youtube.playlistItems().list(
-                part='contentDetails',
-                playlistId=upload_id,
-                maxResults=50)
+        part='contentDetails',
+        playlistId=upload_id,
+        maxResults=50)
     response = request.execute()
 
     list_video_ids = []
@@ -100,10 +96,10 @@ def get_total_video_ids(youtube, upload_id):
             umbrella = False
         else:
             request = youtube.playlistItems().list(
-                    part='contentDetails',
-                    playlistId=upload_id,
-                    maxResults=50,
-                    pageToken=next_page_token)
+                part='contentDetails',
+                playlistId=upload_id,
+                maxResults=50,
+                pageToken=next_page_token)
             response = request.execute()
 
             for i in range(0, len(response['items'])):
@@ -112,6 +108,7 @@ def get_total_video_ids(youtube, upload_id):
             next_page_token = response.get('nextPageToken')
 
     return list_video_ids
+
 
 # video details retrive from youtube
 def get_video_details(youtube, video_id, upload_id):
@@ -146,6 +143,7 @@ def get_video_details(youtube, video_id, upload_id):
 
     return data
 
+
 # comment details retrive from youtube
 def get_comments_details(youtube, video_id):
     request = youtube.commentThreads().list(
@@ -170,6 +168,7 @@ def get_comments_details(youtube, video_id):
         list_comments[c1] = data
         c += 1
     return list_comments
+
 
 # combine the channel, playlists, videos & comments data into single dictionary file
 def data_extraction_youtube(channel_id):
@@ -197,6 +196,7 @@ def data_extraction_youtube(channel_id):
     final.update(video_with_comments)
     return final
 
+
 # display sample json file in streamlit page
 def display_sample_data(channel_id):
     channel_data1 = get_channel_details(youtube, channel_id)
@@ -221,6 +221,7 @@ def display_sample_data(channel_id):
     st.subheader('Sample Output Data:')
     return final1
 
+
 # ---------------- Data save to MongoDB database ----------------------
 
 # list of all collections in the 'project_youtube' database in MongoDB
@@ -232,6 +233,7 @@ def list_mongodb_collection_names(database):
     col.sort(reverse=False)
     return col
 
+
 # collection names in order wise
 def order_mongodb_collection_names():
     st.subheader('List of collections in MongoDB database')
@@ -241,6 +243,7 @@ def order_mongodb_collection_names():
         st.write(str(c) + ' - ' + i)
         c += 1
 
+
 # retrive data store to MongoDB database
 def data_store_mongodb(channel_name, database, data_youtube):
     gopi = pymongo.MongoClient(
@@ -248,6 +251,7 @@ def data_store_mongodb(channel_name, database, data_youtube):
     db = gopi[database]
     col = db[channel_name]
     col.insert_one(data_youtube)
+
 
 # temporary database to store retrive data and finally automatically drop
 def temp_collection_drop():
@@ -258,6 +262,7 @@ def temp_collection_drop():
     if len(col) > 0:
         for i in col:
             db.drop_collection(i)
+
 
 def mongodb(database):
     data_youtube = {}
@@ -277,7 +282,7 @@ def mongodb(database):
     if channel_name not in list_collections_name:
         data_store_mongodb(channel_name, database, data_youtube)
         st.success("The data has been successfully stored in the MongoDB database")
-        st.snow()
+        st.balloons()
         temp_collection_drop()
     else:
         st.warning("The data has already been stored in MongoDB database")
@@ -290,23 +295,70 @@ def mongodb(database):
             db[channel_name].drop()
             data_store_mongodb(channel_name, database, data_youtube)
             st.success("The data has been successfully overwritten and updated in MongoDB database")
-            st.snow()
+            st.balloons()
             temp_collection_drop()
         elif option == 'No':
             temp_collection_drop()
             st.info("The data overwrite process has been skipped")
 
+
 # ---------------- Migrating to SQL Database -----------------------
+
+# Create Database and Table in SQL
+def sql_create_tables():
+    gopi_sql = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
+    cursor = gopi_sql.cursor()
+    cursor.execute("create table if not exists channel(\
+                        channel_id 			varchar(255) primary key,\
+                        channel_name		varchar(255),\
+                        subscription_count	int,\
+                        channel_views		int,\
+                        channel_description	text,\
+                        upload_id			varchar(255),\
+                        country				varchar(255))")
+
+    cursor.execute("create table if not exists playlist(\
+                        playlist_id		varchar(255) primary key,\
+                        playlist_name	varchar(255),\
+                        channel_id		varchar(255),\
+                        upload_id		varchar(255))")
+
+    cursor.execute("create table if not exists video(\
+                        video_id			varchar(255) primary key,\
+                        video_name			varchar(255),\
+                        video_description	text,\
+                        upload_id			varchar(255),\
+                        tags				text,\
+                        published_date		date,\
+                        published_time		time,\
+                        view_count			int,\
+                        like_count			int,\
+                        favourite_count		int,\
+                        comment_count		int,\
+                        duration			time,\
+                        thumbnail			varchar(255),\
+                        caption_status		varchar(255))")
+
+    cursor.execute("create table if not exists comment(\
+                        comment_id				varchar(255) primary key,\
+                        comment_text			text,\
+                        comment_author			varchar(255),\
+                        comment_published_date	date,\
+                        comment_published_time	time,\
+                        video_id				varchar(255))")
+
+    gopi_sql.commit()
 
 # SQL channel names list
 def list_sql_channel_names():
-    gopi = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi.cursor()
     cursor.execute("select channel_name from channel")
     s = cursor.fetchall()
     s = [i[0] for i in s]
     s.sort(reverse=False)
     return s
+
 
 # display the all channel names from SQL channel table
 def order_sql_channel_names():
@@ -319,6 +371,7 @@ def order_sql_channel_names():
         for i in s:
             st.write(str(c) + ' - ' + i)
             c += 1
+
 
 # data migrating to channel table
 def sql_channel(database, col_input):
@@ -341,6 +394,7 @@ def sql_channel(database, col_input):
     channel['channel_views'] = pd.to_numeric(channel['channel_views'])
     return channel
 
+
 # data migrating to playlist table
 def sql_playlists(database, col_input):
     gopi_mdb = pymongo.MongoClient(
@@ -358,6 +412,7 @@ def sql_playlists(database, col_input):
     playlists = pd.DataFrame(data[0])
     playlists = playlists.reindex(columns=['playlist_id', 'playlist_name', 'channel_id', 'upload_id'])
     return playlists
+
 
 # data migrating to video table
 def sql_videos(database, col_input):
@@ -388,6 +443,7 @@ def sql_videos(database, col_input):
     videos['duration'] = pd.to_datetime(videos['duration'], format='%H:%M:%S').dt.time
     videos.drop(columns='comments', inplace=True)
     return videos
+
 
 # data migrating to comment table
 def sql_comments(database, col_input):
@@ -431,7 +487,9 @@ def sql_comments(database, col_input):
     comments['comment_published_time'] = pd.to_datetime(comments['comment_published_time'], format='%H:%M:%S').dt.time
     return comments
 
+
 def sql(database):
+    sql_create_tables()
     order_mongodb_collection_names()
     order_sql_channel_names()
 
@@ -457,7 +515,7 @@ def sql(database):
             videos = sql_videos(database, col_input)
             comments = sql_comments(database, col_input)
 
-            gopi_sql = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+            gopi_sql = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
             cursor = gopi_sql.cursor()
 
             cursor.executemany("insert into channel(channel_id, channel_name, subscription_count, channel_views,\
@@ -478,12 +536,13 @@ def sql(database):
             st.balloons()
             gopi_sql.close()
 
+
 # ----------------------- Analyse the data --------------------------
 
 # List of all channels
 def channels_totalchannels():
     st.subheader('List of Channels')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select channel_name from channel order by channel_name ASC")
     s = cursor.fetchall()
@@ -493,9 +552,10 @@ def channels_totalchannels():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # all channel with playlist names
 def channel_totalplaylists_channelnames():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select distinct playlist.playlist_name, channel.channel_name\
                     from playlist\
@@ -510,9 +570,10 @@ def channel_totalplaylists_channelnames():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # selected channel with playlist names
 def channel_totalplaylists_selectchannelnames(channel):
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select distinct playlist.playlist_name, channel.channel_name\
                         from playlist\
@@ -528,10 +589,11 @@ def channel_totalplaylists_selectchannelnames(channel):
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # channel wise playlists count
 def channels_channelnames_totalplaylists():
     st.subheader('Channel wise Playlists')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select distinct channel.channel_name, count(distinct playlist.playlist_id) as total\
                     from playlist\
@@ -545,9 +607,10 @@ def channels_channelnames_totalplaylists():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # channel wise total videos count
 def channels_channelnames_totalvideos():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select channel.channel_name, count(distinct video.video_id) as total\
                     from video\
@@ -562,9 +625,10 @@ def channels_channelnames_totalvideos():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # start and end date based total published videos
 def channels_channelnames_publishvideos(start_date, end_date):
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select distinct channel.channel_name, count(distinct video.video_id) as total\
                     from video\
@@ -579,9 +643,10 @@ def channels_channelnames_publishvideos(start_date, end_date):
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # channel wise subscriptions
 def channels_channelnames_subscriptions():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select channel_name, subscription_count from channel\
                    order by subscription_count DESC")
@@ -592,10 +657,11 @@ def channels_channelnames_subscriptions():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # channel wise views
 def channels_channelnames_views():
     st.subheader('Channel wise  Views')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select channel_name, channel_views from channel\
                    order by channel_views DESC")
@@ -606,9 +672,10 @@ def channels_channelnames_views():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # channel wise total likes
 def channels_channelnames_totallikes():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select distinct channel.channel_name, cast(sum(subquery.sum1) as int) as sum2\
                     from channel\
@@ -626,10 +693,11 @@ def channels_channelnames_totallikes():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # channel wise total comments
 def channels_channelnames_totalcomments():
     st.subheader('Channel wise  Comments')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select distinct channel.channel_name, count(distinct comment.comment_id) as total\
                     from comment\
@@ -645,6 +713,7 @@ def channels_channelnames_totalcomments():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # convert days with time to HH:MM:SS
 def convert_duration(duration):
     days, time = duration.split(' days ')
@@ -653,9 +722,10 @@ def convert_duration(duration):
     formatted_duration = f'{total_hours:02d}:{minutes:02d}:{seconds:02d}'
     return formatted_duration
 
+
 # channel wise total video durations
 def channels_channelnames_totaldurations():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select channel.channel_name, sum(video.duration) as total\
                     from video\
@@ -670,9 +740,10 @@ def channels_channelnames_totaldurations():
     df['Total Durations'] = df['Total Durations'].apply(lambda x: convert_duration(str(x)))
     return df
 
+
 # channel wise average video durations
 def channels_channelnames_avgdurations():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select channel.channel_name, SUBSTRING(CAST(avg(video.duration) AS VARCHAR), 1, 8) as average\
                     from video\
@@ -685,6 +756,7 @@ def channels_channelnames_avgdurations():
     df = df.rename_axis('S.No')
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
+
 
 # combine all data with charts
 def analysis_channels():
@@ -823,12 +895,13 @@ def analysis_channels():
                           textfont=dict(color='white'))
         st.plotly_chart(fig, use_container_width=True)
 
+
 # ---------------------- video based data analysis -----------------------------------
 
 # all channels - list of all videos of all videos
 def videos_videonames_channelnames():
     st.subheader('Videos wise Channels')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select video.video_name, channel.channel_name\
                     from video\
@@ -843,10 +916,11 @@ def videos_videonames_channelnames():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # selected channel - list of all videos of selected channel
 def videos_videonames_selectchannel(channel):
     st.subheader('Videos wise  Channels')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select video.video_name, channel.channel_name\
                     from video\
@@ -862,10 +936,11 @@ def videos_videonames_selectchannel(channel):
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # all channels - videos wise total views
 def videos_videonames_totalviews():
     st.subheader('Videos wise Views')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select video.video_name, video.view_count, channel.channel_name\
                     from video\
@@ -880,10 +955,11 @@ def videos_videonames_totalviews():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # selected channels - videos wise total views
 def videos_videonames_selectviews(channel):
     st.subheader('Videos wise Views')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select video.video_name, video.view_count, channel.channel_name\
                     from video\
@@ -899,10 +975,11 @@ def videos_videonames_selectviews(channel):
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # all channels - videos wise total likes
 def videos_videonames_totallikes():
     st.subheader('Videos wise Likes')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select video.video_name, video.like_count, channel.channel_name\
                     from video\
@@ -917,10 +994,11 @@ def videos_videonames_totallikes():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # selected channels - videos wise total likes
 def videos_videonames_selectlikes(channel):
     st.subheader('Videos wise Likes')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select video.video_name, video.like_count, channel.channel_name\
                     from video\
@@ -936,10 +1014,11 @@ def videos_videonames_selectlikes(channel):
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # all channels - videos wise total comments count
 def videos_videonames_totalcommentscount():
     st.subheader('Videos wise Total Comments')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select video.video_name, video.comment_count, channel.channel_name\
                     from video\
@@ -954,10 +1033,11 @@ def videos_videonames_totalcommentscount():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # selected channels - videos wise total comments count
 def videos_videonames_selectcommentscount(channel):
     st.subheader('Videos wise Total Comments')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select video.video_name, video.comment_count, channel.channel_name\
                     from video\
@@ -973,10 +1053,11 @@ def videos_videonames_selectcommentscount(channel):
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # all channels - videos wise total comments
 def videos_videonames_totalcomments():
     st.subheader('Videos wise Comments')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select video.video_name, comment.comment_text, channel.channel_name\
                     from comment\
@@ -992,10 +1073,11 @@ def videos_videonames_totalcomments():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # selected channels - videos wise total comments
 def videos_videonames_selectcomments(channel):
     st.subheader('Videos wise Comments')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select video.video_name, comment.comment_text, channel.channel_name\
                     from comment\
@@ -1012,10 +1094,11 @@ def videos_videonames_selectcomments(channel):
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # all channels - videos wise total video durations
 def videos_videonames_totaldurations():
     st.subheader('Videos wise Durations')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select video.video_name, video.duration, channel.channel_name\
                     from video\
@@ -1030,10 +1113,11 @@ def videos_videonames_totaldurations():
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
+
 # selected channels - videos wise total video durations
 def videos_videonames_selectdurations(channel):
     st.subheader('Videos wise Durations')
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select video.video_name, video.duration, channel.channel_name\
                     from video\
@@ -1048,6 +1132,7 @@ def videos_videonames_selectdurations(channel):
     df = df.rename_axis('S.No')
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
+
 
 # combine all channels and videos def functions in single function
 def analysis_videos():
@@ -1067,10 +1152,11 @@ def analysis_videos():
         st.dataframe(videos_videonames_selectcomments(option_videos))
         st.dataframe(videos_videonames_selectdurations(option_videos))
 
+
 # ---------------------- sample SQL queries ------------------------------------
 
 def q1_allvideoname_channelname():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select video.video_name, channel.channel_name\
                     from video\
@@ -1086,8 +1172,9 @@ def q1_allvideoname_channelname():
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
 
+
 def q2_channelname_totalvideos():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select distinct channel.channel_name, count(distinct video.video_id) as total\
                     from video\
@@ -1103,8 +1190,9 @@ def q2_channelname_totalvideos():
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
 
+
 def q3_mostviewvideos_channelname():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select distinct video.video_name, video.view_count, channel.channel_name\
                     from video\
@@ -1120,8 +1208,9 @@ def q3_mostviewvideos_channelname():
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
 
+
 def q4_videonames_totalcomments():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select video.video_name, video.comment_count, channel.channel_name\
                     from video\
@@ -1137,8 +1226,9 @@ def q4_videonames_totalcomments():
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
 
+
 def q5_videonames_highestlikes_channelname():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select distinct video.video_name, channel.channel_name, video.like_count\
                     from video\
@@ -1154,8 +1244,9 @@ def q5_videonames_highestlikes_channelname():
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
 
+
 def q6_videonames_totallikes_channelname():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select distinct video.video_name, video.like_count, channel.channel_name\
                     from video\
@@ -1171,8 +1262,9 @@ def q6_videonames_totallikes_channelname():
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
 
+
 def q7_channelnames_totalviews():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select channel_name, channel_views from channel\
                     order by channel_views DESC")
@@ -1183,8 +1275,9 @@ def q7_channelnames_totalviews():
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
 
+
 def q8_channelnames_releasevideos(year):
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select distinct channel.channel_name, count(distinct video.video_id) as total\
         from video\
@@ -1200,8 +1293,9 @@ def q8_channelnames_releasevideos(year):
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
 
+
 def q9_channelnames_avgvideoduration():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute("select channel.channel_name, substring(cast(avg(video.duration) as varchar), 1, 8) as average\
                     from video\
@@ -1216,8 +1310,9 @@ def q9_channelnames_avgvideoduration():
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
 
+
 def q10_videonames_channelnames_mostcomments():
-    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+    gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_s.cursor()
     cursor.execute('select video.video_name, video.comment_count, channel.channel_name\
                     from video\
@@ -1233,6 +1328,7 @@ def q10_videonames_channelnames_mostcomments():
     data = data.rename_axis('S.No')
     data.index = data.index.map(lambda x: '{:^{}}'.format(x, 10))
     return data
+
 
 # combine all quesries in single function
 def sql_queries():
@@ -1291,7 +1387,11 @@ option = st.selectbox('', list_options)
 if option:
     try:
         if option == 'Retrieving data from the YouTube API':
-            channel_id = st.text_input("Enter channel ID: ")  # get a input from user
+            channel_id = st.text_input("Enter Channel ID: ")  # get a input from user
+            api_key = st.text_input("Enter Your API Key:", type='password')  # get a API key from user
+            api_service_name = "youtube"
+            api_version = "v3"
+            youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey=api_key)
             submit_c = st.button('Enter')
             if submit_c:
                 data_youtube = {}
@@ -1313,7 +1413,7 @@ if option:
             sql(database)
 
         elif option == 'Data Analysis':
-            gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='gopi_1')
+            gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
             cursor = gopi_s.cursor()
             cursor.execute('select channel_name from channel order by channel_name ASC')
             s = cursor.fetchall()
@@ -1338,4 +1438,4 @@ if option:
         else:
             st.warning("Please select the option")
     except:
-        st.error("Please enter the valid channel ID")
+        st.error("Please enter the valid Channel ID and API key")
