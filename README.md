@@ -30,13 +30,12 @@ YouTube Data Harvesting and Warehousing is a project aimed at developing a user-
 
 To run this project, you need to install the following packages:
 ```python
-pip install googleapiclient.discovery
+pip install google-api-python-client
 pip install pymongo
-pip install pandas as pd
+pip install pandas
 pip install psycopg2
-pip install datetime
-pip install streamlit as st
-pip install plotly.express as px
+pip install streamlit
+pip install plotly
 ```
 
 **Usage**
