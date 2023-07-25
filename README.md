@@ -21,9 +21,9 @@ YouTube Data Harvesting and Warehousing is a project aimed at developing a user-
 **Key Technologies and Skills**
 - Python scripting
 - Data Collection
-- MongoDB
-- Streamlit
 - API integration
+- Streamlit
+- Plotly
 - Data Management using MongoDB (Atlas) and SQL
 
 **Installation**

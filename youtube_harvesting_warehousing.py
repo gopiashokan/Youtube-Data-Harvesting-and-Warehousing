@@ -236,12 +236,16 @@ def list_mongodb_collection_names(database):
 
 # collection names in order wise
 def order_mongodb_collection_names():
-    st.subheader('List of collections in MongoDB database')
-    c = 1
     m = list_mongodb_collection_names(database)
-    for i in m:
-        st.write(str(c) + ' - ' + i)
-        c += 1
+    if m == []:
+        st.info("The Mongodb database is currently empty")
+    else:
+        st.subheader('List of collections in MongoDB database')
+        c = 1
+        m = list_mongodb_collection_names(database)
+        for i in m:
+            st.write(str(c) + ' - ' + i)
+            c += 1
 
 
 # retrive data store to MongoDB database
@@ -265,41 +269,48 @@ def temp_collection_drop():
 
 
 def mongodb(database):
-    data_youtube = {}
     gopi = pymongo.MongoClient(
         "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
     db = gopi['temp']
     col = db.list_collection_names()
-    channel_name = col[0]
-
-    # Now we get the channel name
-    col1 = db[channel_name]
-    for i in col1.find():
-        data_youtube.update(i)
-
-    list_collections_name = list_mongodb_collection_names(database)
-
-    if channel_name not in list_collections_name:
-        data_store_mongodb(channel_name, database, data_youtube)
-        st.success("The data has been successfully stored in the MongoDB database")
-        st.balloons()
-        temp_collection_drop()
+    if len(col) == 0:
+        st.info("There is no data retrived from youtube")
     else:
-        st.warning("The data has already been stored in MongoDB database")
-        option = st.radio('Do you want to overwrite the data currently stored?',
-                          ['Select the option below', 'Yes', 'No'])
-        if option == 'Yes':
-            gopi = pymongo.MongoClient(
-                "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
-            db = gopi[database]
-            db[channel_name].drop()
+        data_youtube = {}
+        gopi = pymongo.MongoClient(
+            "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
+        db = gopi['temp']
+        col = db.list_collection_names()
+        channel_name = col[0]
+
+        # Now we get the channel name
+        col1 = db[channel_name]
+        for i in col1.find():
+            data_youtube.update(i)
+
+        list_collections_name = list_mongodb_collection_names(database)
+
+        if channel_name not in list_collections_name:
             data_store_mongodb(channel_name, database, data_youtube)
-            st.success("The data has been successfully overwritten and updated in MongoDB database")
+            st.success("The data has been successfully stored in the MongoDB database")
             st.balloons()
             temp_collection_drop()
-        elif option == 'No':
-            temp_collection_drop()
-            st.info("The data overwrite process has been skipped")
+        else:
+            st.warning("The data has already been stored in MongoDB database")
+            option = st.radio('Do you want to overwrite the data currently stored?',
+                              ['Select the option below', 'Yes', 'No'])
+            if option == 'Yes':
+                gopi = pymongo.MongoClient(
+                    "mongodb://gopiashokan:gopiroot@ac-0vdscni-shard-00-00.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-01.xdp3lkp.mongodb.net:27017,ac-0vdscni-shard-00-02.xdp3lkp.mongodb.net:27017/?ssl=true&replicaSet=atlas-11e4qv-shard-0&authSource=admin&retryWrites=true&w=majority")
+                db = gopi[database]
+                db[channel_name].drop()
+                data_store_mongodb(channel_name, database, data_youtube)
+                st.success("The data has been successfully overwritten and updated in MongoDB database")
+                st.balloons()
+                temp_collection_drop()
+            elif option == 'No':
+                temp_collection_drop()
+                st.info("The data overwrite process has been skipped")
 
 
 # ---------------- Migrating to SQL Database -----------------------
@@ -309,45 +320,46 @@ def sql_create_tables():
     gopi_sql = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
     cursor = gopi_sql.cursor()
     cursor.execute("create table if not exists channel(\
-                        channel_id 			varchar(255) primary key,\
-                        channel_name		varchar(255),\
-                        subscription_count	int,\
-                        channel_views		int,\
-                        channel_description	text,\
-                        upload_id			varchar(255),\
-                        country				varchar(255))")
+                                        channel_id 			varchar(255) primary key,\
+                                        channel_name		varchar(255),\
+                                        subscription_count	int,\
+                                        channel_views		int,\
+                                        channel_description	text,\
+                                        upload_id			varchar(255),\
+                                        country				varchar(255))")
 
     cursor.execute("create table if not exists playlist(\
-                        playlist_id		varchar(255) primary key,\
-                        playlist_name	varchar(255),\
-                        channel_id		varchar(255),\
-                        upload_id		varchar(255))")
+                                        playlist_id		varchar(255) primary key,\
+                                        playlist_name	varchar(255),\
+                                        channel_id		varchar(255),\
+                                        upload_id		varchar(255))")
 
     cursor.execute("create table if not exists video(\
-                        video_id			varchar(255) primary key,\
-                        video_name			varchar(255),\
-                        video_description	text,\
-                        upload_id			varchar(255),\
-                        tags				text,\
-                        published_date		date,\
-                        published_time		time,\
-                        view_count			int,\
-                        like_count			int,\
-                        favourite_count		int,\
-                        comment_count		int,\
-                        duration			time,\
-                        thumbnail			varchar(255),\
-                        caption_status		varchar(255))")
+                                        video_id			varchar(255) primary key,\
+                                        video_name			varchar(255),\
+                                        video_description	text,\
+                                        upload_id			varchar(255),\
+                                        tags				text,\
+                                        published_date		date,\
+                                        published_time		time,\
+                                        view_count			int,\
+                                        like_count			int,\
+                                        favourite_count		int,\
+                                        comment_count		int,\
+                                        duration			time,\
+                                        thumbnail			varchar(255),\
+                                        caption_status		varchar(255))")
 
     cursor.execute("create table if not exists comment(\
-                        comment_id				varchar(255) primary key,\
-                        comment_text			text,\
-                        comment_author			varchar(255),\
-                        comment_published_date	date,\
-                        comment_published_time	time,\
-                        video_id				varchar(255))")
+                                        comment_id				varchar(255) primary key,\
+                                        comment_text			text,\
+                                        comment_author			varchar(255),\
+                                        comment_published_date	date,\
+                                        comment_published_time	time,\
+                                        video_id				varchar(255))")
 
     gopi_sql.commit()
+
 
 # SQL channel names list
 def list_sql_channel_names():
@@ -490,51 +502,56 @@ def sql_comments(database, col_input):
 
 def sql(database):
     sql_create_tables()
-    order_mongodb_collection_names()
-    order_sql_channel_names()
-
-    list_mongodb_notin_sql = ['Select the option']
     m = list_mongodb_collection_names(database)
     s = list_sql_channel_names()
-    for i in m:
-        if i not in s:
-            list_mongodb_notin_sql.append(i)
+    if s == m == []:
+        st.info("Both Mongodb and SQL databases are currently empty")
+    else:
+        order_mongodb_collection_names()
+        order_sql_channel_names()
 
-    option_sql = st.selectbox('', list_mongodb_notin_sql)
-    if option_sql:
-        if option_sql == 'Select the option':
-            st.warning('Please select the channel')
-        else:
-            col_input = option_sql
+        list_mongodb_notin_sql = ['Select the option']
+        m = list_mongodb_collection_names(database)
+        s = list_sql_channel_names()
+        for i in m:
+            if i not in s:
+                list_mongodb_notin_sql.append(i)
 
-            pd.set_option('display.max_rows', None)
-            pd.set_option('display.max_columns', None)
+        option_sql = st.selectbox('', list_mongodb_notin_sql)
+        if option_sql:
+            if option_sql == 'Select the option':
+                st.warning('Please select the channel')
+            else:
+                col_input = option_sql
 
-            channel = sql_channel(database, col_input)
-            playlists = sql_playlists(database, col_input)
-            videos = sql_videos(database, col_input)
-            comments = sql_comments(database, col_input)
+                pd.set_option('display.max_rows', None)
+                pd.set_option('display.max_columns', None)
 
-            gopi_sql = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
-            cursor = gopi_sql.cursor()
+                channel = sql_channel(database, col_input)
+                playlists = sql_playlists(database, col_input)
+                videos = sql_videos(database, col_input)
+                comments = sql_comments(database, col_input)
 
-            cursor.executemany("insert into channel(channel_id, channel_name, subscription_count, channel_views,\
-                                                channel_description, upload_id, country) values(%s,%s,%s,%s,%s,%s,%s)",
-                               channel.values.tolist())
-            cursor.executemany("insert into playlist(playlist_id, playlist_name, channel_id, upload_id)\
-                                                values(%s,%s,%s,%s)", playlists.values.tolist())
-            cursor.executemany("insert into video(video_id, video_name, video_description, upload_id, tags, published_date,\
-                                                published_time, view_count, like_count, favourite_count, comment_count, duration, thumbnail,\
-                                                caption_status) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                               videos.values.tolist())
-            cursor.executemany("insert into comment(comment_id, comment_text, comment_author, comment_published_date,\
-                                                comment_published_time, video_id) values(%s,%s,%s,%s,%s,%s)",
-                               comments.values.tolist())
+                gopi_sql = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
+                cursor = gopi_sql.cursor()
 
-            gopi_sql.commit()
-            st.success("Migrated Data Successfully to SQL Data Warehouse")
-            st.balloons()
-            gopi_sql.close()
+                cursor.executemany("insert into channel(channel_id, channel_name, subscription_count, channel_views,\
+                                                    channel_description, upload_id, country) values(%s,%s,%s,%s,%s,%s,%s)",
+                                   channel.values.tolist())
+                cursor.executemany("insert into playlist(playlist_id, playlist_name, channel_id, upload_id)\
+                                                    values(%s,%s,%s,%s)", playlists.values.tolist())
+                cursor.executemany("insert into video(video_id, video_name, video_description, upload_id, tags, published_date,\
+                                                    published_time, view_count, like_count, favourite_count, comment_count, duration, thumbnail,\
+                                                    caption_status) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                                   videos.values.tolist())
+                cursor.executemany("insert into comment(comment_id, comment_text, comment_author, comment_published_date,\
+                                                    comment_published_time, video_id) values(%s,%s,%s,%s,%s,%s)",
+                                   comments.values.tolist())
+
+                gopi_sql.commit()
+                st.success("Migrated Data Successfully to SQL Data Warehouse")
+                st.balloons()
+                gopi_sql.close()
 
 
 # ----------------------- Analyse the data --------------------------
@@ -640,6 +657,7 @@ def channels_channelnames_publishvideos(start_date, end_date):
     s = cursor.fetchall()
     i = [i for i in range(1, len(s) + 1)]
     df = pd.DataFrame(s, columns=['Channel Names', 'Published videos'], index=i)
+    df = df.rename_axis('S.No')
     df.index = df.index.map(lambda x: '{:^{}}'.format(x, 10))
     return df
 
@@ -775,12 +793,12 @@ def analysis_channels():
     # Channel wise Playlist Counts pie
     df = channels_channelnames_totalplaylists()
     df_sorted = df.sort_values(by='Total Playlists', ascending=True)
-    col3, col4 = st.columns(2)
+    col3, col4 = st.columns([1, 2])
     with col3:
         st.dataframe(df)
     with col4:
         fig = px.pie(df_sorted, names='Channel Names', values='Total Playlists', hole=0.5)
-        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent+value', textposition='outside',
+        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent+label', texttemplate='%{percent:.2%}', textposition='outside',
                           textfont=dict(color='white'))
         st.plotly_chart(fig, use_container_width=True)
 
@@ -788,7 +806,7 @@ def analysis_channels():
     st.subheader('Channel wise Videos')
     df = channels_channelnames_totalvideos()
     df_sorted = df.sort_values(by='Total Videos', ascending=True)
-    col5, col6 = st.columns(2)
+    col5, col6 = st.columns([1, 2])
     with col5:
         st.dataframe(df)
     with col6:
@@ -807,32 +825,33 @@ def analysis_channels():
     end_date = st.date_input('End Date', value=current_date, max_value=current_date)
     df = channels_channelnames_publishvideos(start_date, end_date)
     df_sorted = df.sort_values(by='Published videos', ascending=True)
-    col19, col20 = st.columns(2)
+    col19, col20 = st.columns([1, 2])
     with col19:
         st.dataframe(df)
     with col20:
-        fig = px.pie(df_sorted, names='Channel Names', values='Published videos', hole=0.5)
-        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent+value', textposition='outside',
-                          textfont=dict(color='white'))
+        fig = px.bar(df_sorted, x='Published videos', y='Channel Names', template='seaborn')
+        fig.update_traces(text=df_sorted['Published videos'], textposition='outside')
+        colors = px.colors.qualitative.Plotly
+        fig.update_traces(marker=dict(color=colors[:len(df_sorted)]))
         st.plotly_chart(fig, use_container_width=True)
 
     # Channel wise Subscrptions pie
     df = channels_channelnames_subscriptions()
     df_sorted = df.sort_values(by='Total Subscriptions', ascending=True)
-    col9, col10 = st.columns(2)
+    col9, col10 = st.columns([1, 2])
     with col9:
         st.subheader('Channel wise Subscriptions')
         st.dataframe(df)
     with col10:
-        fig = px.pie(df_sorted, names='Channel Names', values='Total Subscriptions', hole=0)
-        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent+value', textposition='auto',
+        fig = px.pie(df_sorted, names='Channel Names', values='Total Subscriptions', hole=0.5)
+        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent+label', texttemplate='%{percent:.2%}', textposition='outside',
                           insidetextfont=dict(color='white'))
         st.plotly_chart(fig, use_container_width=True)
 
     # Channel wise Views bar
     df = channels_channelnames_views()
     df_sorted = df.sort_values(by='Total Views', ascending=True)
-    col11, col12 = st.columns(2)
+    col11, col12 = st.columns([1, 2])
     with col11:
         st.dataframe(df)
     with col12:
@@ -845,20 +864,20 @@ def analysis_channels():
     # Channel wise  Likes pie
     df = channels_channelnames_totallikes()
     df_sorted = df.sort_values(by='Total Likes', ascending=True)
-    col13, col14 = st.columns(2)
+    col13, col14 = st.columns([1, 2])
     with col13:
         st.subheader('Channel wise  Likes')
         st.dataframe(df)
     with col14:
-        fig = px.pie(df_sorted, names='Channel Names', values='Total Likes', hole=0)
-        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent+value', textposition='auto',
+        fig = px.pie(df_sorted, names='Channel Names', values='Total Likes', hole=0.5)
+        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent+label', texttemplate='%{percent:.2%}', textposition='outside',
                           textfont=dict(color='white'))
         st.plotly_chart(fig, use_container_width=True)
 
     # Channel wise Comments bar
     df = channels_channelnames_totalcomments()
     df_sorted = df.sort_values(by='Total Comments', ascending=True)
-    col15, col16 = st.columns(2)
+    col15, col16 = st.columns([1, 2])
     with col15:
         st.dataframe(df)
     with col16:
@@ -871,27 +890,27 @@ def analysis_channels():
     # Channel wise Video Total Durations pie
     df = channels_channelnames_totaldurations()
     df_sorted = df.sort_values(by='Total Durations', ascending=False)
-    col17, col18 = st.columns(2)
+    col17, col18 = st.columns([1, 2])
     with col17:
         st.subheader('Channel wise Total Durations')
         st.dataframe(df)
     with col18:
         df_sorted['Total Durations'] = pd.to_timedelta(df_sorted['Total Durations']).dt.total_seconds()
         fig = px.pie(df_sorted, names='Channel Names', values='Total Durations', hole=0.5)
-        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent', textposition='outside')
+        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent+label', texttemplate='%{percent:.2%}', textposition='outside')
         st.plotly_chart(fig, use_container_width=True)
 
     # Channel wise Video Average Durations pie
     df = channels_channelnames_avgdurations()
     df_sorted = df.sort_values(by='Average Durations', ascending=False)
-    col19, col20 = st.columns(2)
+    col19, col20 = st.columns([1, 2])
     with col19:
         st.subheader('Channel wise Average Durations')
         st.dataframe(df)
     with col20:
         df_sorted['Average Durations'] = pd.to_timedelta(df_sorted['Average Durations']).dt.total_seconds()
         fig = px.pie(df_sorted, names='Channel Names', values='Average Durations', hole=0.5)
-        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent', textposition='outside',
+        fig.update_traces(text=df_sorted['Channel Names'], textinfo='percent+label', texttemplate='%{percent:.2%}', textposition='outside',
                           textfont=dict(color='white'))
         st.plotly_chart(fig, use_container_width=True)
 
@@ -1413,22 +1432,30 @@ if option:
             sql(database)
 
         elif option == 'Data Analysis':
-            gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
-            cursor = gopi_s.cursor()
-            cursor.execute('select channel_name from channel order by channel_name ASC')
-            s = cursor.fetchall()
-            list_channel = ['Over All']
-            list_channel.extend([i[0] for i in s])
-            st.subheader('Please select the option below:')
-            analysis = ['Select one', 'Channels', 'Videos']
-            select_analysis = st.selectbox('', analysis)
-            if select_analysis == 'Channels':
-                analysis_channels()
-            elif select_analysis == 'Videos':
-                analysis_videos()
+            s1 = list_sql_channel_names()
+            if s1 == []:
+                st.info("The SQL database is currently empty")
+            else:
+                gopi_s = psycopg2.connect(host='localhost', user='postgres', password='root', database='youtube')
+                cursor = gopi_s.cursor()
+                cursor.execute('select channel_name from channel order by channel_name ASC')
+                s = cursor.fetchall()
+                list_channel = ['Over All']
+                list_channel.extend([i[0] for i in s])
+                st.subheader('Please select the option below:')
+                analysis = ['Select one', 'Channels', 'Videos']
+                select_analysis = st.selectbox('', analysis)
+                if select_analysis == 'Channels':
+                    analysis_channels()
+                elif select_analysis == 'Videos':
+                    analysis_videos()
 
         elif option == 'SQL Queries':
-            sql_queries()
+            s1 = list_sql_channel_names()
+            if s1 == []:
+                st.info("The SQL database is currently empty")
+            else:
+                sql_queries()
 
         elif option == 'Exit':
             temp_collection_drop()
