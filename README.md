@@ -94,4 +94,4 @@ This project is licensed under the MIT License. Please review the LICENSE file f
 
 For any further questions or inquiries, please contact us at gopiashokankiot@gmail.com. We are happy to assist you.
 
-- **LinkedIn:** https://www/linkedin.com/in/gopiashokan
+- **LinkedIn:** https://www.linkedin.com/in/gopiashokan
