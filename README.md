@@ -92,5 +92,8 @@ This project is licensed under the MIT License. Please review the LICENSE file f
 
 **Contact**
 
-For any further questions or inquiries, please contact us at gopiashokankiot@gmail.com. We are happy to assist you.
-Connect with me on [LinkedIn](www.linkedin.com/in/gopiashokan) for more updates and projects!
+📧 Email: gopiashokankiot@gmail.com
+🌐 LinkedIn: [linkedin.com/in/gopiashokan](https://www.linkedin.com/in/gopiashokan)
+
+For any further questions or inquiries, feel free to reach out. We are happy to assist you with any queries.
+
