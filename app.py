@@ -1647,14 +1647,13 @@ if option == 'Data Retrive from YouTube API':
             youtube = googleapiclient.discovery.build(api_service_name,
                                                     api_version, developerKey=api_key)
 
-            data = {}
             final = youtube_extract.main(channel_id)
-            data.update(final)
-            channel_name = data['channel']['channel_name']
+            channel_name = final['channel']['channel_name']
 
             mongodb.drop_temp_collection()
             mongodb.data_storage(channel_name=channel_name,
-                                 database='temp', data=final)
+                                 database='temp', 
+                                 data=final)
 
             # display the sample data in streamlit
             st.json(youtube_extract.display_sample_data(channel_id))
