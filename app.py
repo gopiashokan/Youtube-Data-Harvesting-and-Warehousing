@@ -1630,8 +1630,8 @@ with st.sidebar:
 if option == 'Data Retrive from YouTube API':
 
     try:
-
-        # get input from user
+        
+        # streamlit page split into 2 columns for text input and get input from users
         col1, col2 = st.columns(2, gap='medium')
         with col1:
             channel_id = st.text_input("Enter Channel ID: ")
@@ -1640,6 +1640,8 @@ if option == 'Data Retrive from YouTube API':
         
         submit = st.button(label='Submit')
 
+        
+        # only work if user entered the channel_id and click the submit button, otherwise it will not work!
         if submit and option is not None:
 
             api_service_name = "youtube"
@@ -1647,9 +1649,11 @@ if option == 'Data Retrive from YouTube API':
             youtube = googleapiclient.discovery.build(api_service_name,
                                                     api_version, developerKey=api_key)
 
+            # we can call the main function only from youtube_extract class, it call the other def functions and return the final data (dictionary)
             final = youtube_extract.main(channel_id)
             channel_name = final['channel']['channel_name']
 
+            # Extracted fianl data store to temporary database in mongodb
             mongodb.drop_temp_collection()
             mongodb.data_storage(channel_name=channel_name,
                                  database='temp', 
