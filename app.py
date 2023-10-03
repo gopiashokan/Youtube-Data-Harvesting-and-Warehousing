@@ -1671,6 +1671,7 @@ if option == 'Data Retrive from YouTube API':
 
 
 elif option == 'Store data to MongoDB':
+    # access the data from temporary database and store to project_youtube database.
     mongodb.main('project_youtube')
 
 
